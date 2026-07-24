@@ -1,0 +1,33 @@
+{
+  "name": "cmlmarketplace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Headless commerce SDK and reference marketplace for CheckMyLicense.",
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/catalog",
+    "packages/server",
+    "apps/demo-store"
+  ],
+  "scripts": {
+    "build:packages": "npm run build -w @cml-marketplace/core && npm run build -w @cml-marketplace/catalog && npm run build -w @cml-marketplace/server",
+    "build": "npm run build:packages && npm run build -w @cml-marketplace/demo-store",
+    "dev": "npm run build:packages && npm run dev -w @cml-marketplace/demo-store",
+    "test": "npm run build:packages && vitest run",
+    "typecheck": "npm run build:packages && npm run typecheck -w @cml-marketplace/demo-store",
+    "check": "npm run test && npm run typecheck && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.2.0"
+  }
+}
