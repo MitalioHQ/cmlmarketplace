@@ -14,7 +14,7 @@ describe("CML server client", () => {
         timestamp: "1700000000",
         rawBody: '{"channel":"northstar","country_code":"FR"}',
       }),
-    ).toBe("pSen/aaDoO/aRQqEDpmksDKRTagNv9CTTndfH1lK+F4=");
+    ).toBe("Z7mnTfTKgSI6YhmF0H1ycymF/74pKKDyNSThITOfCkE=");
   });
 
   it("calls the documented catalog endpoint with signed headers", async () => {
@@ -62,7 +62,7 @@ describe("CML server client", () => {
     ).toBeUndefined();
   });
 
-  it("submits and then confirms an order using the documented paths", async () => {
+  it("submits, confirms, and cancels an order using the documented paths", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockImplementation(async () =>
@@ -82,6 +82,10 @@ describe("CML server client", () => {
 
     await client.submitOrder(order);
     await client.confirmOrder(114);
+    await client.cancelOrder({
+      order_id: 114,
+      notes: "Provider payment failed",
+    });
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       "https://api.example.test/v1/order/submit",
@@ -94,6 +98,15 @@ describe("CML server client", () => {
     );
     expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
       JSON.stringify({ order_id: 114 }),
+    );
+    expect(fetchMock.mock.calls[2]?.[0]).toBe(
+      "https://api.example.test/v1/order/cancel",
+    );
+    expect(fetchMock.mock.calls[2]?.[1]?.body).toBe(
+      JSON.stringify({
+        order_id: 114,
+        notes: "Provider payment failed",
+      }),
     );
   });
 });

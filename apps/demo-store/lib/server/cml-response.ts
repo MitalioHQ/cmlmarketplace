@@ -1,4 +1,10 @@
-export function extractCmlOrder(raw) {
+import "server-only";
+
+import type { Money } from "@cml-marketplace/core";
+
+export type UnknownRecord = Record<string, unknown>;
+
+export function extractCmlOrder(raw: unknown): UnknownRecord {
   const root = asRecord(raw);
   const success = asRecord(root.success);
   const candidates = [
@@ -12,7 +18,7 @@ export function extractCmlOrder(raw) {
     if (Array.isArray(candidate)) {
       const first = candidate[0];
       if (first && typeof first === "object") {
-        return first;
+        return asRecord(first);
       }
       continue;
     }
@@ -23,7 +29,7 @@ export function extractCmlOrder(raw) {
         ? record.returning[0]
         : undefined;
       return returning && typeof returning === "object"
-        ? returning
+        ? asRecord(returning)
         : record;
     }
   }
@@ -31,7 +37,7 @@ export function extractCmlOrder(raw) {
   return root;
 }
 
-export function extractCmlWarnings(raw) {
+export function extractCmlWarnings(raw: unknown): string[] {
   const root = asRecord(raw);
   const success = asRecord(root.success);
   const warnings = Array.isArray(root.warnings)
@@ -40,10 +46,16 @@ export function extractCmlWarnings(raw) {
       ? success.warnings
       : [];
 
-  return warnings.filter((value) => typeof value === "string");
+  return warnings.filter(
+    (value): value is string => typeof value === "string",
+  );
 }
 
-export function parseCmlMoney(value, currency, fallbackMinor = 0) {
+export function parseCmlMoney(
+  value: unknown,
+  currency: string,
+  fallbackMinor = 0,
+): Money {
   if (value === undefined || value === null || value === "") {
     return { amountMinor: fallbackMinor, currency };
   }
@@ -59,15 +71,16 @@ export function parseCmlMoney(value, currency, fallbackMinor = 0) {
   }
 
   const sign = match[1] === "-" ? -1 : 1;
+  const whole = Number(match[2] ?? 0);
   const fraction = `${match[3] ?? ""}00`.slice(0, 2);
   return {
-    amountMinor: sign * (Number(match[2]) * 100 + Number(fraction)),
+    amountMinor: sign * (whole * 100 + Number(fraction)),
     currency,
   };
 }
 
-export function formatCmlAmount(money) {
-  const amountMinor = Number(money?.amountMinor);
+export function formatCmlAmount(money: Money): string {
+  const amountMinor = Number(money.amountMinor);
 
   if (!Number.isSafeInteger(amountMinor)) {
     throw new TypeError("CML payment money requires an integer minor amount.");
@@ -80,8 +93,17 @@ export function formatCmlAmount(money) {
   ).padStart(2, "0")}`;
 }
 
-function asRecord(value) {
+export function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? value
+    ? (value as UnknownRecord)
     : {};
+}
+
+export function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+export function asPositiveInteger(value: unknown): number | undefined {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : undefined;
 }

@@ -15,8 +15,8 @@ storefront, payment-provider checkout, and provider webhook validation.
   proxy. It never receives a CML API secret.
 - `@cml-marketplace/server` — server-only, HMAC-signed client for the deployed
   CML E-Commerce API.
-- `@cml-marketplace/demo-store` — generic marketplace reference UI with live
-  northstar catalogue and order routes.
+- `@cml-marketplace/demo-store` — Next.js reference storefront with live
+  northstar catalogue and server-only order routes.
 
 ## Start the demo
 
@@ -29,6 +29,16 @@ npm run dev
 Set `CML_API_KEY` and `CML_API_SECRET` in the ignored `.env.local` file. The
 demo is served at `http://127.0.0.1:4173/`.
 
+Checkout writes are disabled by default. Durable checkout requires
+`DATABASE_URL`, and live customer/order/payment operations require the explicit
+`CML_DEMO_MUTATIONS_ENABLED=true` safety flag. Do not enable that flag on a
+public deployment until access controls and a safe CML tenant have been
+verified.
+
+Production mutation routes enforce same-origin requests. Additional trusted
+frontend origins can be listed in `CML_ALLOWED_ORIGINS`; Vercel environment
+changes require a redeployment.
+
 Without credentials it renders an empty configuration state. It never
 substitutes local products. With credentials it performs the documented
 sequence:
@@ -39,9 +49,11 @@ sequence:
 4. Submit the order as Draft using `/order/submit`.
 5. Confirm it to Pending Payment using `/order/confirm`.
 
-The demo Pay button simulates the merchant-owned provider and verified webhook,
-then calls CML's live payment endpoint. It can mark the order Paid and enqueue
-real licence jobs even though no external money is collected.
+The demo checkout offers two simulated provider outcomes. Success calls CML's
+live payment endpoint and can mark the order Paid and enqueue real licence
+jobs. Failure records a declined payment, then cancels the still-unpaid CML
+order. Both paths are live CML mutations even though no external money is
+collected.
 
 ## Validate the workspace
 
@@ -71,3 +83,5 @@ sent to CML and must never be bundled into browser code.
 See [Architecture](docs/architecture.md) and
 [API contract](docs/api-contract.md) for the boundaries. Start with the
 [merchant user guide](docs/user-guide.md) when integrating another storefront.
+See [Vercel deployment](docs/deployment-vercel.md) for database, environment,
+security, rollout, and rollback instructions.

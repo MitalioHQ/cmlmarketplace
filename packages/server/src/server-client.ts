@@ -47,6 +47,16 @@ export interface CmlPaymentInput {
   payment_method?: string;
 }
 
+export interface CmlOrderCancellationInput {
+  order_id: number;
+  refund?: {
+    enabled: boolean;
+    amount?: number | string;
+  };
+  deactivate_licenses?: boolean;
+  notes?: string;
+}
+
 export interface CmlApiClient {
   getCatalog(request: {
     channel: string;
@@ -56,6 +66,7 @@ export interface CmlApiClient {
   previewOrder(order: CmlOrderInput): Promise<unknown>;
   submitOrder(order: CmlOrderInput): Promise<unknown>;
   confirmOrder(orderId: number): Promise<unknown>;
+  cancelOrder(cancellation: CmlOrderCancellationInput): Promise<unknown>;
   getOrder(orderCode: string): Promise<unknown>;
   recordPayment(payment: CmlPaymentInput): Promise<unknown>;
 }
@@ -145,6 +156,11 @@ export function createCmlApiClient(config: CmlApiClientConfig): CmlApiClient {
     confirmOrder(orderId) {
       assertPositiveInteger(orderId, "order ID");
       return post("/order/confirm", { order_id: orderId });
+    },
+
+    cancelOrder(cancellation) {
+      assertPositiveInteger(cancellation.order_id, "order ID");
+      return post("/order/cancel", cancellation);
     },
 
     getOrder(orderCode) {

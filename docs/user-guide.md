@@ -65,7 +65,7 @@ Add `ecommerce:orders:cancel` only if the integration supports cancellation or
 refund workflows.
 
 The API secret must exist only in the merchant backend. Never expose it through
-Vite variables, client JavaScript, HTML, logs, or provider metadata.
+`NEXT_PUBLIC_` variables, client JavaScript, HTML, logs, or provider metadata.
 
 ## 4. Get the SDK
 
@@ -111,7 +111,20 @@ CML_API_SECRET=replace-with-the-merchant-secret
 CML_CHANNEL_SLUG=replace-with-the-channel-slug
 CML_DEFAULT_COUNTRY=FR
 CML_API_BASE_URL=https://vwqretlvkrravzguxydw.functions.eu-west-2.nhost.run/v1
+DATABASE_URL=replace-with-a-pooled-postgres-connection
+CML_DEMO_MUTATIONS_ENABLED=false
+CML_ALLOWED_ORIGINS=
 ```
+
+The reference demo requires Postgres for durable production checkout state.
+Its live write routes remain disabled until
+`CML_DEMO_MUTATIONS_ENABLED=true` is set intentionally.
+
+Same-origin browser requests are accepted automatically, including behind
+Vercel's forwarded host/protocol headers. Use `CML_ALLOWED_ORIGINS` only for
+additional trusted frontends, with comma-separated complete origins such as
+`https://store.example.com`. Redeploy after changing a Vercel environment
+variable.
 
 Initialize the server client:
 
@@ -246,6 +259,37 @@ records safely.
 Do not call the payment API from the customer browser or from an unverified
 success-page redirect.
 
+### Handle a failed payment
+
+When a verified provider event reports a definitive failure, record it with a
+stable transaction ID and status `2`:
+
+```ts
+await cml.recordPayment({
+  order_code: cmlOrderCode,
+  provider: "paypal",
+  provider_txn_id: providerTransactionId,
+  amount: attemptedAmount,
+  status: 2,
+  payment_method: "card",
+});
+```
+
+A failed-payment record does not automatically change the CML order status. If
+the merchant's policy is to abandon that checkout, cancel the still-unpaid
+order separately:
+
+```ts
+await cml.cancelOrder({
+  order_id: cmlOrderId,
+  notes: "Provider payment failed before capture.",
+});
+```
+
+The reference demo performs these calls in sequence and only for Pending
+Payment orders. It does not use the refund or licence-deactivation options and
+will reject the failure simulation once an order is paid.
+
 ## 12. Display order and fulfilment status
 
 Once captured payments cover the order total, CML marks the order Paid and
@@ -268,11 +312,13 @@ Recommended test sequence:
 3. Confirm an invalid slug displays no products.
 4. Preview an order and verify totals without creating an order.
 5. Submit and confirm one clearly labelled test order.
-6. Treat the demo Pay button as a live CML mutation: it simulates the external
-   provider, then records a captured payment in CML.
-7. Use it only with an approved test order because the captured payment can
-   mark it Paid and enqueue licence jobs.
-8. Replay the same provider transaction ID and verify duplication is rejected.
+6. Treat the demo payment buttons as live CML mutations: they simulate the
+   external provider, then update payment and order records in CML.
+7. Exercise the failure button with a separate unpaid test order; it records a
+   failed payment and cancels that order in CML.
+8. Use the success button only with an approved test order because the captured
+   payment can mark it Paid and enqueue licence jobs.
+9. Replay the same provider transaction ID and verify duplication is rejected.
 
 ## 14. Production checklist
 
@@ -311,9 +357,15 @@ sequenceDiagram
     C-->>M: Pending-payment order
     M->>P: Create merchant-owned checkout
     P-->>M: Verified payment webhook
-    M->>C: Record payment with idempotency key
-    C->>J: Enqueue license creation when fully paid
-    C-->>M: Payment and order status
+    alt Payment captured
+        M->>C: Record captured payment with idempotency key
+        C->>J: Enqueue license creation when fully paid
+        C-->>M: Paid order status
+    else Payment failed and checkout abandoned
+        M->>C: Record failed payment with idempotency key
+        M->>C: Cancel unpaid order
+        C-->>M: Cancelled order status
+    end
 ```
 
 The diagram expresses the intended SDK abstraction. In the current deployed

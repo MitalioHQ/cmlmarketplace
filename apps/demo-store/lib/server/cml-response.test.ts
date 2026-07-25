@@ -1,11 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 
 import {
   extractCmlOrder,
   extractCmlWarnings,
   formatCmlAmount,
   parseCmlMoney,
-} from "./cml-response.mjs";
+} from "./cml-response";
 
 describe("CML response mapping", () => {
   it("parses formatted catalogue prices into exact minor units", () => {

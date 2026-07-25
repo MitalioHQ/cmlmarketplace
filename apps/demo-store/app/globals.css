@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap");
 
+@charset "UTF-8";
+
 :root {
   color: #172019;
   background: #f7f8f4;
@@ -1494,6 +1496,23 @@ footer > div {
   justify-content: space-between;
 }
 
+.payment-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.failure-button {
+  min-height: 48px;
+  border-color: #d9adad;
+  color: #8d2e2e;
+  background: #fff7f7;
+}
+
+.failure-button:hover:not(:disabled) {
+  border-color: #bd7f7f;
+  background: #fcecec;
+}
+
 .success-step {
   display: grid;
   place-items: center;
@@ -1512,6 +1531,15 @@ footer > div {
   background: var(--success);
   box-shadow: 0 13px 28px rgba(22, 106, 67, 0.2);
   font-size: 1.3rem;
+}
+
+.success-icon.cancelled {
+  background: #a14343;
+  box-shadow: 0 13px 28px rgba(161, 67, 67, 0.2);
+}
+
+.success-step.cancelled .eyebrow {
+  color: #8d2e2e;
 }
 
 .success-step .eyebrow {
@@ -1576,6 +1604,16 @@ footer > div {
   border-color: var(--success);
   color: #fff;
   background: var(--success);
+}
+
+.status-timeline .cancelled {
+  color: #8d2e2e;
+}
+
+.status-timeline .cancelled span {
+  border-color: #a14343;
+  color: #fff;
+  background: #a14343;
 }
 
 .status-timeline .simulated {

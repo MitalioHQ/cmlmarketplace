@@ -1,3 +1,5 @@
+"use client";
+
 import {
   addCartItem,
   clearCart,
@@ -24,7 +26,7 @@ import {
   DemoApiError,
   DemoCommerceGateway,
   type DemoConfig,
-} from "./demo-api";
+} from "../lib/client/demo-api";
 
 const gateway = new DemoCommerceGateway();
 const emptyCatalog: Catalog = {
@@ -44,6 +46,7 @@ type CatalogStatus =
   | "not_found"
   | "error"
   | "unconfigured";
+type PaymentOutcome = "paid" | "cancelled";
 
 const initialCustomer: CustomerInput = {
   email: "",
@@ -69,7 +72,7 @@ export function App() {
   const [referralCode, setReferralCode] = useState("");
   const [preview, setPreview] = useState<OrderPreview>();
   const [order, setOrder] = useState<CommerceOrder>();
-  const [paymentSimulated, setPaymentSimulated] = useState(false);
+  const [paymentOutcome, setPaymentOutcome] = useState<PaymentOutcome>();
   const [liveOrderStatus, setLiveOrderStatus] =
     useState<CommerceOrder["status"]>();
   const [busy, setBusy] = useState(false);
@@ -177,7 +180,7 @@ export function App() {
     setCart(nextCart);
     setPreview(undefined);
     setOrder(undefined);
-    setPaymentSimulated(false);
+    setPaymentOutcome(undefined);
     setError(undefined);
   };
 
@@ -225,7 +228,24 @@ export function App() {
     try {
       const result = await gateway.simulatePayment(order.id);
       setOrder(result.order);
-      setPaymentSimulated(result.simulated);
+      setPaymentOutcome("paid");
+      setLiveOrderStatus(result.liveOrderStatus);
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handlePaymentFailure = async () => {
+    if (!order) return;
+    setBusy(true);
+    setError(undefined);
+
+    try {
+      const result = await gateway.simulatePaymentFailure(order.id);
+      setOrder(result.order);
+      setPaymentOutcome("cancelled");
       setLiveOrderStatus(result.liveOrderStatus);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
@@ -240,13 +260,25 @@ export function App() {
     setReferralCode("");
     setPreview(undefined);
     setOrder(undefined);
-    setPaymentSimulated(false);
+    setPaymentOutcome(undefined);
     setLiveOrderStatus(undefined);
     setError(undefined);
     setCheckoutOpen(false);
   };
 
-  const liveReady = Boolean(config?.cmlConfigured && catalog.available);
+  const catalogReady = Boolean(config?.cmlConfigured && catalog.available);
+  const checkoutReady = Boolean(
+    catalogReady &&
+      config?.checkoutConfigured &&
+      config.mutationsEnabled,
+  );
+  const checkoutLabel = !config?.cmlConfigured
+    ? "Live CML configuration required"
+    : !config.checkoutConfigured
+      ? "Durable checkout storage required"
+      : !config.mutationsEnabled
+        ? "Live checkout disabled"
+        : "Review with CML";
   const marketplaceName = "CML Marketplace";
   const marketplaceMark = marketplaceName.slice(0, 1).toUpperCase() || "M";
   const catalogueProblem = getCatalogueProblem(catalogStatus, catalog);
@@ -269,7 +301,7 @@ export function App() {
         </nav>
         <div className="header-actions">
           <span
-            className={`environment-badge ${liveReady ? "live" : "fallback"}`}
+            className={`environment-badge ${catalogReady ? "live" : "fallback"}`}
           >
             <span className="status-dot" />
             {getCatalogueBadge(catalogStatus)}
@@ -314,7 +346,7 @@ export function App() {
               </a>
             </div>
             <p className="catalog-source">
-              <span className={liveReady ? "source-live" : ""} />
+              <span className={catalogReady ? "source-live" : ""} />
               {catalogNotice}
             </p>
           </div>
@@ -525,12 +557,10 @@ export function App() {
                   <button
                     className="primary-button full-width"
                     type="button"
-                    disabled={!liveReady}
+                    disabled={!checkoutReady}
                     onClick={() => setCheckoutOpen(true)}
                   >
-                    {liveReady
-                      ? "Review with CML"
-                      : "Live CML configuration required"}
+                    {checkoutLabel}
                     <span aria-hidden="true">→</span>
                   </button>
                 </>
@@ -651,7 +681,7 @@ export function App() {
               <div>
                 <p className="eyebrow">Live CML order demo</p>
                 <h2 id="checkout-title">
-                  {getCheckoutTitle(preview, order, paymentSimulated)}
+                  {getCheckoutTitle(preview, order, paymentOutcome)}
                 </h2>
               </div>
               <button
@@ -668,7 +698,7 @@ export function App() {
             <CheckoutProgress
               preview={preview}
               order={order}
-              paymentSimulated={paymentSimulated}
+              paymentOutcome={paymentOutcome}
             />
 
             <div className="modal-content">
@@ -699,17 +729,19 @@ export function App() {
                 />
               )}
 
-              {order && !paymentSimulated && (
+              {order && !paymentOutcome && (
                 <PaymentStep
                   order={order}
                   busy={busy}
                   onPay={handlePayment}
+                  onFail={handlePaymentFailure}
                 />
               )}
 
-              {order && paymentSimulated && (
+              {order && paymentOutcome && (
                 <SuccessStep
                   order={order}
+                  outcome={paymentOutcome}
                   liveOrderStatus={liveOrderStatus}
                   onStartNew={startNewOrder}
                 />
@@ -922,10 +954,12 @@ function PaymentStep({
   order,
   busy,
   onPay,
+  onFail,
 }: {
   order: CommerceOrder;
   busy: boolean;
   onPay: () => void;
+  onFail: () => void;
 }) {
   return (
     <div className="payment-step">
@@ -950,46 +984,76 @@ function PaymentStep({
         <strong>{formatMoney(order.amountDue)}</strong>
       </div>
       <p className="security-note">
-        This calls CML <code>/order/payment</code> with the full amount. It can
-        mark the live order Paid and enqueue real licence creation jobs. No
-        external money is collected.
+        Choose the provider outcome to simulate. Success records the full
+        payment in CML. Failure records a declined payment, then cancels the
+        unpaid CML order. No external money is collected.
       </p>
-      <button className="primary-button pay-button" type="button" disabled={busy} onClick={onPay}>
-        <span>
-          {busy
-            ? "Recording captured payment in CML…"
-            : "Simulate provider + record CML payment"}
-        </span>
-        <strong>{formatMoney(order.amountDue)}</strong>
-      </button>
+      <div className="payment-actions">
+        <button
+          className="secondary-button failure-button"
+          type="button"
+          disabled={busy}
+          onClick={onFail}
+        >
+          Simulate payment failure + cancel order
+        </button>
+        <button
+          className="primary-button pay-button"
+          type="button"
+          disabled={busy}
+          onClick={onPay}
+        >
+          <span>
+            {busy
+              ? "Updating CML order…"
+              : "Simulate success + record CML payment"}
+          </span>
+          <strong>{formatMoney(order.amountDue)}</strong>
+        </button>
+      </div>
     </div>
   );
 }
 
 function SuccessStep({
   order,
+  outcome,
   liveOrderStatus,
   onStartNew,
 }: {
   order: CommerceOrder;
+  outcome: PaymentOutcome;
   liveOrderStatus?: CommerceOrder["status"];
   onStartNew: () => void;
 }) {
+  const cancelled = outcome === "cancelled";
+
   return (
-    <div className="success-step">
-      <span className="success-icon">✓</span>
-      <p className="eyebrow">Live CML payment recorded</p>
-      <h3>The order is paid.</h3>
+    <div className={`success-step${cancelled ? " cancelled" : ""}`}>
+      <span className={`success-icon${cancelled ? " cancelled" : ""}`}>
+        {cancelled ? "×" : "✓"}
+      </span>
+      <p className="eyebrow">
+        {cancelled
+          ? "Payment failure recorded in CML"
+          : "Live CML payment recorded"}
+      </p>
+      <h3>{cancelled ? "The order was cancelled." : "The order is paid."}</h3>
       <p>
-        The external provider and webhook were simulated, then the captured
-        payment was recorded in CML. Order <strong>{order.code}</strong> is{" "}
+        {cancelled
+          ? "The provider decline was simulated, the failed payment was recorded, and the unpaid CML order was cancelled."
+          : "The external provider and webhook were simulated, then the captured payment was recorded in CML."}{" "}
+        Order <strong>{order.code}</strong> is{" "}
         <strong>{formatStatus(liveOrderStatus ?? order.status)}</strong>.
-        Licence fulfilment continues asynchronously in CML.
+        {!cancelled && " Licence fulfilment continues asynchronously in CML."}
       </p>
       <div className="status-timeline">
         <div className="complete"><span>✓</span><strong>Customer + preview</strong></div>
         <div className="complete"><span>✓</span><strong>Order confirmed</strong></div>
-        <div className="complete"><span>✓</span><strong>CML payment recorded</strong></div>
+        <div className={cancelled ? "cancelled" : "complete"}>
+          <span>{cancelled ? "×" : "✓"}</span>
+          <strong>{cancelled ? "Payment failed + cancelled" : "CML payment recorded"}</strong>
+        </div>
       </div>
       <button className="primary-button" type="button" onClick={onStartNew}>Start another order</button>
     </div>
@@ -999,19 +1063,24 @@ function SuccessStep({
 function CheckoutProgress({
   preview,
   order,
-  paymentSimulated,
+  paymentOutcome,
 }: {
   preview?: OrderPreview;
   order?: CommerceOrder;
-  paymentSimulated: boolean;
+  paymentOutcome?: PaymentOutcome;
 }) {
+  const checkoutComplete = Boolean(paymentOutcome);
+
   return (
     <div className="checkout-progress" aria-label="Checkout progress">
       <div className="active"><span>{preview || order ? "✓" : "1"}</span><strong>Customer + preview</strong></div>
       <i className={preview || order ? "active" : ""} />
       <div className={order ? "active" : ""}><span>{order ? "✓" : "2"}</span><strong>Confirm order</strong></div>
       <i className={order ? "active" : ""} />
-      <div className={paymentSimulated ? "active" : ""}><span>{paymentSimulated ? "✓" : "3"}</span><strong>CML payment</strong></div>
+      <div className={checkoutComplete ? "active" : ""}>
+        <span>{paymentOutcome === "cancelled" ? "×" : checkoutComplete ? "✓" : "3"}</span>
+        <strong>{paymentOutcome === "cancelled" ? "Payment failed" : "CML payment"}</strong>
+      </div>
     </div>
   );
 }
@@ -1309,9 +1378,10 @@ function getEmptyCatalogueMessage(
 function getCheckoutTitle(
   preview?: OrderPreview,
   order?: CommerceOrder,
-  paymentSimulated?: boolean,
+  paymentOutcome?: PaymentOutcome,
 ) {
-  if (paymentSimulated) return "Simulation complete";
+  if (paymentOutcome === "cancelled") return "Order cancelled";
+  if (paymentOutcome === "paid") return "Simulation complete";
   if (order) return "Try the merchant checkout";
   if (preview) return "Review CML pricing";
   return "Customer details";

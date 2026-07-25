@@ -25,6 +25,13 @@ secret. The merchant server signs every upstream request with:
 The API key, timestamp, and signature are sent through `X-API-Key`,
 `X-API-Timestamp`, and `X-API-Signature`. The secret is not transmitted.
 
+Mutation routes require a browser `Origin` in production. The origin must match
+the public request origin or an explicitly configured
+`CML_ALLOWED_ORIGINS` entry. Because Vercel Functions can expose an internal
+request URL, the public same-origin value is reconstructed from
+`host`/`x-forwarded-host` and `x-forwarded-proto`. Origins are normalized before
+comparison; wildcards are not supported.
+
 The merchant validates the payment provider webhook before calling
 `/order/payment`. The globally unique `provider_txn_id` is the replay guard.
 
@@ -42,20 +49,47 @@ The merchant validates the payment provider webhook before calling
 7. The merchant creates any provider checkout and stores the CML order code in
    its own metadata.
 8. After verifying the provider webhook, the merchant calls `/order/payment`.
-9. When captured payments cover the total, CML marks the order Paid and queues
-   licence fulfilment.
+9. On capture, when payments cover the total, CML marks the order Paid and
+   queues licence fulfilment.
+10. On a definitive failure, the merchant records payment status `2`. If its
+    policy abandons the checkout, it then calls `/order/cancel` for the unpaid
+    Pending Payment order.
 
 ## Customer identity limitation
 
 The public CML endpoint creates customers and rejects duplicate emails. It does
-not currently expose lookup-by-email or upsert. The demo caches email-to-ID
-mappings for its running process, but a production merchant should persist the
-CML customer ID in its own integration records. A duplicate CML customer from
-an earlier process is surfaced as a clear conflict.
+not currently expose lookup-by-email or upsert. The Next.js demo persists
+email-to-ID mappings in Postgres and serializes creation attempts per normalized
+email. A duplicate CML customer that predates the integration record is
+surfaced as a clear conflict.
+
+## Runtime boundary
+
+The storefront uses the Next.js App Router. Interactive cart and checkout UI
+remain in a Client Component. Each `/api/*` endpoint is a Node.js Route Handler
+that can run as an independent Vercel Function.
+
+No correctness-critical state is stored in process memory in production:
+
+- customer-to-CML links are durable;
+- preview payloads have a 15-minute expiry and an atomic confirmation claim;
+- confirmed orders remain available to later payment requests;
+- rate-limit counters are shared by all function instances.
+
+Local development falls back to an in-memory store only when `DATABASE_URL` is
+absent and `NODE_ENV` is not `production`.
 
 ## Demo safety
 
 Catalogue reads are safe to exercise during QA. Customer creation and order
-creation happen only after a user submits the checkout form. The Pay button
-simulates the external provider but records a live captured CML payment. It can
-mark the order Paid and trigger real licence jobs.
+creation happen only after a user submits the checkout form. The success
+button simulates the external provider but records a live captured CML payment;
+it can mark the order Paid and trigger real licence jobs. The failure button
+records a live failed-payment entry and cancels the live unpaid order. It is
+restricted to Pending Payment orders and never requests a refund or licence
+deactivation.
+
+All mutation Route Handlers are disabled unless
+`CML_DEMO_MUTATIONS_ENABLED=true`. They also validate the request origin,
+enforce request-size and schema limits, and use shared rate limits. Production
+deployments require durable storage.

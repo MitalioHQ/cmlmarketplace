@@ -7,15 +7,25 @@ import type {
 
 export interface DemoConfig {
   cmlConfigured: boolean;
+  checkoutConfigured: boolean;
+  mutationsEnabled: boolean;
   channelSlug: string;
   defaultCountry: string;
   catalogMode: "live" | "unconfigured";
-  paymentMode: "simulation_with_live_cml_record";
+  paymentMode: "simulation_with_live_cml_mutations";
 }
 
 export interface SimulatedPaymentResult {
   simulated: true;
   recordedInCml: true;
+  liveOrderStatus: CommerceOrder["status"];
+  order: CommerceOrder;
+}
+
+export interface SimulatedPaymentFailureResult {
+  simulated: true;
+  failedPaymentRecordedInCml: true;
+  cancelledInCml: true;
   liveOrderStatus: CommerceOrder["status"];
   order: CommerceOrder;
 }
@@ -60,6 +70,18 @@ export class DemoCommerceGateway {
   async simulatePayment(orderId: string): Promise<SimulatedPaymentResult> {
     return request<SimulatedPaymentResult>(
       "/api/checkout/simulate-payment",
+      {
+        method: "POST",
+        body: JSON.stringify({ orderId }),
+      },
+    );
+  }
+
+  async simulatePaymentFailure(
+    orderId: string,
+  ): Promise<SimulatedPaymentFailureResult> {
+    return request<SimulatedPaymentFailureResult>(
+      "/api/checkout/simulate-payment-failure",
       {
         method: "POST",
         body: JSON.stringify({ orderId }),

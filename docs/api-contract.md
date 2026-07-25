@@ -76,6 +76,22 @@ Omit `preview` to create the order in Draft status. Required scope:
 This moves a Draft order to Pending Payment. Required scope:
 `ecommerce:orders:write`.
 
+## Cancel
+
+`POST /order/cancel`
+
+```json
+{
+  "order_id": 114,
+  "notes": "Provider payment failed before capture."
+}
+```
+
+Required scope: `ecommerce:orders:cancel`. Cancelling an unpaid Pending Payment
+order moves it to Cancelled. CML also supports refund and licence-deactivation
+options for paid orders, but those options are intentionally outside this
+demo's payment-failure flow.
+
 ## Read
 
 `POST /order/get`
@@ -108,7 +124,9 @@ failed, and `3` is refund. `provider_txn_id` must be globally unique.
 
 The merchant must verify the provider webhook before making this call. A
 captured payment that covers the order total marks the order Paid and queues
-licence creation.
+licence creation. Recording status `2` creates a failed-payment record but does
+not itself change the order status; the merchant must cancel the order
+separately when its business rules require cancellation.
 
 ## Money
 
