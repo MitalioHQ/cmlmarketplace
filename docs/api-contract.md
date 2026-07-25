@@ -16,7 +16,7 @@ the CML HMAC headers.
 ```json
 {
   "channel": "northstar",
-  "country_code": "LB"
+  "country_code": "FR"
 }
 ```
 
@@ -34,8 +34,8 @@ order. A restricted country returns HTTP 200 with `available: false`.
   "customer": {
     "email": "customer@example.com",
     "first_name": "Mina",
-    "last_name": "Ali",
-    "country_code": "LB"
+    "last_name": "Vein",
+    "country_code": "FR"
   }
 }
 ```

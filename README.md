@@ -61,7 +61,7 @@ const cml = createCmlApiClient({
 
 const catalogue = await cml.getCatalog({
   channel: "northstar",
-  country_code: "LB",
+  country_code: "FR",
 });
 ```
 

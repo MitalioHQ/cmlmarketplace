@@ -876,8 +876,8 @@ button:disabled {
 
 .flow-section {
   padding: 110px max(5vw, calc((100vw - 1420px) / 2));
-  color: #eff6f0;
-  background: #15271b;
+  color: #1c3525;
+  background: #edf4eb;
 }
 
 .flow-intro {
@@ -891,7 +891,7 @@ button:disabled {
 .flow-intro .eyebrow {
   grid-column: 1 / -1;
   margin-bottom: -27px;
-  color: #a8d9b7;
+  color: #36754d;
 }
 
 .flow-intro h2 {
@@ -900,7 +900,7 @@ button:disabled {
 
 .flow-intro > p:last-child {
   margin: 0;
-  color: #adbaaf;
+  color: #5e6f61;
   font-size: 0.82rem;
   line-height: 1.75;
 }
@@ -908,9 +908,9 @@ button:disabled {
 .flow-diagram {
   overflow-x: auto;
   padding: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid #d0ddd0;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.68);
 }
 
 .flow-diagram svg {
@@ -924,12 +924,12 @@ button:disabled {
 }
 
 .sequence-participant rect {
-  fill: #203527;
-  stroke: rgba(181, 227, 193, 0.36);
+  fill: #f4f8f2;
+  stroke: #a9c4ae;
 }
 
 .sequence-participant text {
-  fill: #f1f7f2;
+  fill: #24462f;
   font-family: "DM Sans", sans-serif;
   font-size: 12px;
   font-weight: 800;
@@ -937,7 +937,7 @@ button:disabled {
 }
 
 .sequence-lifeline {
-  stroke: rgba(181, 227, 193, 0.25);
+  stroke: rgba(58, 101, 71, 0.3);
   stroke-dasharray: 6 7;
   stroke-width: 1;
 }
@@ -945,18 +945,18 @@ button:disabled {
 .sequence-message line,
 .sequence-message path {
   fill: none;
-  stroke: #b5e3c1;
+  stroke: #4f8960;
   stroke-width: 1.5;
 }
 
 .sequence-message.response line {
-  stroke: #93ad99;
+  stroke: #819485;
   stroke-dasharray: 6 5;
 }
 
 .sequence-message text {
-  fill: #dbe8de;
-  stroke: #182b1e;
+  fill: #294b34;
+  stroke: #f8faf6;
   stroke-linejoin: round;
   stroke-width: 8px;
   paint-order: stroke;
@@ -966,46 +966,26 @@ button:disabled {
   text-anchor: middle;
 }
 
+.sequence-diagram marker path {
+  fill: #4f8960;
+}
+
 .sequence-self text {
   text-anchor: start;
 }
 
-.flow-technical-note {
-  display: grid;
-  grid-template-columns: 155px 1fr;
-  gap: 22px;
-  margin-top: 18px;
-  padding: 18px 20px;
-  border: 1px solid rgba(181, 227, 193, 0.18);
-  border-radius: 14px;
-  color: #aebbb0;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.flow-technical-note strong {
-  color: #d9f99d;
-  font-family: "Manrope", sans-serif;
-  font-size: 0.72rem;
-}
-
-.flow-technical-note p {
-  margin: 0;
-  font-size: 0.68rem;
-  line-height: 1.65;
-}
-
 .flow-zone {
-  fill: rgba(255, 255, 255, 0.025);
-  stroke: rgba(255, 255, 255, 0.1);
+  fill: rgba(255, 255, 255, 0.62);
+  stroke: #d0ddd0;
 }
 
 .flow-zone.cml {
-  fill: rgba(166, 221, 182, 0.045);
-  stroke: rgba(166, 221, 182, 0.18);
+  fill: rgba(221, 239, 222, 0.72);
+  stroke: #bfd4c2;
 }
 
 .zone-title {
-  fill: #90a394;
+  fill: #647767;
   font-family: "DM Sans", sans-serif;
   font-size: 10px;
   font-weight: 800;
@@ -1013,36 +993,36 @@ button:disabled {
 }
 
 .flow-node rect {
-  fill: #203527;
-  stroke: rgba(255, 255, 255, 0.14);
+  fill: #f8fbf7;
+  stroke: #c2d2c4;
 }
 
 .flow-node circle {
-  fill: #d9f99d;
+  fill: #cfe9c4;
 }
 
 .node-number {
-  fill: #193020;
+  fill: #24462f;
   font-size: 10px;
   font-weight: 800;
   text-anchor: middle;
 }
 
 .node-title {
-  fill: #f2f7f3;
+  fill: #24462f;
   font-size: 12px;
   font-weight: 800;
 }
 
 .node-copy {
-  fill: #a9b6ac;
+  fill: #647467;
   font-size: 10px;
 }
 
 .flow-arrow,
 .flow-return {
   fill: none;
-  stroke: #b5e3c1;
+  stroke: #4f8960;
   stroke-width: 1.5;
   marker-end: url("#arrow");
 }
@@ -1052,7 +1032,7 @@ button:disabled {
 }
 
 .arrow-label {
-  fill: #8fa192;
+  fill: #657868;
   font-size: 9px;
   text-anchor: middle;
 }
@@ -1066,7 +1046,7 @@ button:disabled {
 
 .flow-legend > div {
   padding: 10px 28px 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid #cbd8cb;
 }
 
 .flow-legend > div:first-child {
@@ -1077,7 +1057,7 @@ button:disabled {
 .legend-number {
   display: block;
   margin-bottom: 12px;
-  color: #9bc7a7;
+  color: #3d7b51;
   font-size: 0.58rem;
   font-weight: 800;
 }
@@ -1089,7 +1069,7 @@ button:disabled {
 
 .flow-legend p {
   margin: 7px 0 0;
-  color: #a9b5ab;
+  color: #617164;
   font-size: 0.66rem;
   line-height: 1.55;
 }
@@ -1104,6 +1084,22 @@ button:disabled {
 
 .developer-section h2 {
   max-width: 610px;
+}
+
+.developer-copy {
+  max-width: 560px;
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.developer-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-top: 30px;
 }
 
 .contract-list {
@@ -1740,13 +1736,8 @@ footer > div {
   .flow-legend > div,
   .flow-legend > div:first-child {
     padding: 17px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 1px solid #cbd8cb;
     border-left: 0;
-  }
-
-  .flow-technical-note {
-    grid-template-columns: 1fr;
-    gap: 8px;
   }
 
   .contract-list p {

@@ -12,7 +12,7 @@ describe("CML server client", () => {
         apiKey: "key_test",
         apiSecret: "secret_test",
         timestamp: "1700000000",
-        rawBody: '{"channel":"northstar","country_code":"LB"}',
+        rawBody: '{"channel":"northstar","country_code":"FR"}',
       }),
     ).toBe("pSen/aaDoO/aRQqEDpmksDKRTagNv9CTTndfH1lK+F4=");
   });
@@ -40,7 +40,7 @@ describe("CML server client", () => {
 
     await client.getCatalog({
       channel: "northstar",
-      country_code: "LB",
+      country_code: "FR",
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -52,7 +52,7 @@ describe("CML server client", () => {
           "X-API-Timestamp": "1700000000",
           "X-API-Signature": expect.any(String),
         }),
-        body: '{"channel":"northstar","country_code":"LB"}',
+        body: '{"channel":"northstar","country_code":"FR"}',
       }),
     );
     expect(

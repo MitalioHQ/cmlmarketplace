@@ -21,7 +21,7 @@ loadLocalEnvironment(resolve(workspaceRoot, ".env.local"));
 const port = Number(process.env.PORT ?? 4173);
 const channelSlug = process.env.CML_CHANNEL_SLUG?.trim() || "northstar";
 const defaultCountry =
-  process.env.CML_DEFAULT_COUNTRY?.trim().toUpperCase() || "LB";
+  process.env.CML_DEFAULT_COUNTRY?.trim().toUpperCase() || "FR";
 const apiKey = process.env.CML_API_KEY?.trim() || "";
 const apiSecret = process.env.CML_API_SECRET?.trim() || "";
 const cmlConfigured = Boolean(apiKey && apiSecret);

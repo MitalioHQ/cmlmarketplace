@@ -49,7 +49,7 @@ const initialCustomer: CustomerInput = {
   email: "",
   firstName: "",
   lastName: "",
-  countryCode: "LB",
+  countryCode: "FR",
 };
 
 export function App() {
@@ -247,10 +247,7 @@ export function App() {
   };
 
   const liveReady = Boolean(config?.cmlConfigured && catalog.available);
-  const marketplaceName =
-    catalogStatus === "live" || catalogStatus === "restricted"
-      ? catalog.channel.displayName
-      : "Marketplace";
+  const marketplaceName = "CML Marketplace";
   const marketplaceMark = marketplaceName.slice(0, 1).toUpperCase() || "M";
   const catalogueProblem = getCatalogueProblem(catalogStatus, catalog);
 
@@ -294,20 +291,23 @@ export function App() {
       <main>
         <section className="hero">
           <div className="hero-copy">
-            <p className="eyebrow">A demo marketplace powered by CML</p>
-            <h1>
-              {catalogStatus === "live"
-                ? `${marketplaceName}, ready to explore.`
-                : "A catalogue-first marketplace."}
-            </h1>
+            <p className="eyebrow">
+              Build your CML marketplace in 5 minutes
+            </p>
+            <h1>A marketplace, ready to explore.</h1>
             <p>
-              Every product, title, description, price, and availability rule
-              on this page comes from the CML sales-channel catalogue. Nothing
-              is invented locally.
+              Use the free, open-source CML SDK to connect your sales channel
+              and launch a marketplace in minutes, without starting from
+              scratch.
             </p>
             <div className="hero-actions">
-              <a className="primary-link" href="#catalog">
-                Browse products <span aria-hidden="true">→</span>
+              <a
+                className="primary-link"
+                href="https://github.com/MitalioHQ/cmlmarketplace"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Download from GitHub <span aria-hidden="true">↗</span>
               </a>
               <a className="secondary-link" href="#how-it-works">
                 See the integration flow
@@ -581,9 +581,32 @@ export function App() {
         </section>
 
         <section className="developer-section" id="developers">
-          <div>
-            <p className="eyebrow">Integration contract</p>
-            <h2>A thin storefront. A reliable source of truth.</h2>
+          <div className="developer-intro">
+            <p className="eyebrow">For developers</p>
+            <h2>Everything you need to launch in 5 minutes.</h2>
+            <p className="developer-copy">
+              Download the ready-to-use SDK from GitHub, then use the CML user
+              guide for setup instructions, API details, and integration
+              guidance.
+            </p>
+            <div className="developer-actions">
+              <a
+                className="primary-link"
+                href="https://github.com/MitalioHQ/cmlmarketplace"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Download the SDK <span aria-hidden="true">↗</span>
+              </a>
+              <a
+                className="secondary-link"
+                href="https://checkmylicense.dev/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Read the CML user guide <span aria-hidden="true">↗</span>
+              </a>
+            </div>
           </div>
           <div className="contract-list">
             <p><code>POST /sales-channel/catalog</code><span>Read northstar products</span></p>
@@ -1183,16 +1206,6 @@ function CommerceFlow() {
             );
           })}
         </svg>
-      </div>
-      <div className="flow-technical-note">
-        <strong>Implementation note</strong>
-        <p>
-          This demo proxies catalogue access through the merchant backend to
-          keep HMAC credentials out of the browser. The current deployed
-          customer endpoint creates a customer before preview; the SDK can
-          expose the intended upsert abstraction once CML provides customer
-          lookup or native upsert.
-        </p>
       </div>
     </div>
   );

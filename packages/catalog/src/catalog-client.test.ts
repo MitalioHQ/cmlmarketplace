@@ -26,11 +26,11 @@ describe("catalog client", () => {
 
     await client.getCatalog({
       channelSlug: " northstar ",
-      countryCode: "lb",
+      countryCode: "fr",
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://merchant.example.test/api/catalog?channel=northstar&country=LB",
+      "https://merchant.example.test/api/catalog?channel=northstar&country=FR",
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({

@@ -75,7 +75,7 @@ The packages are currently workspace packages and are not yet published to
 npm. A developer can use the repository directly:
 
 ```bash
-git clone https://github.com/hhajjali/cmlmarketplace.git
+git clone https://github.com/MitalioHQ/cmlmarketplace.git
 cd cmlmarketplace
 npm install
 copy .env.example .env.local
@@ -109,7 +109,7 @@ Create an ignored `.env.local`:
 CML_API_KEY=replace-with-the-merchant-key
 CML_API_SECRET=replace-with-the-merchant-secret
 CML_CHANNEL_SLUG=replace-with-the-channel-slug
-CML_DEFAULT_COUNTRY=LB
+CML_DEFAULT_COUNTRY=FR
 CML_API_BASE_URL=https://vwqretlvkrravzguxydw.functions.eu-west-2.nhost.run/v1
 ```
 
@@ -142,7 +142,7 @@ const catalogue = await cml.getCatalog({
 Expose a safe merchant route such as:
 
 ```text
-GET /api/catalog?country=LB
+GET /api/catalog?country=FR
 ```
 
 The browser can use the catalogue package against that route:
@@ -156,7 +156,7 @@ const catalogueClient = createCatalogClient({
 
 const catalogue = await catalogueClient.getCatalog({
   channelSlug: "northstar",
-  countryCode: "LB",
+  countryCode: "FR",
 });
 ```
 
