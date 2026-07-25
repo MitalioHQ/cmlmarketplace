@@ -24,6 +24,11 @@ server to a Next.js App Router application.
 | Manual `.env.local` parser | Server-only `@next/env` workspace loading |
 | Vite `dist` output | Native Next.js build output |
 
+The app workspace owns its production-build TypeScript toolchain. This keeps
+Vercel monorepo installs reproducible when `apps/demo-store` is selected as the
+Root Directory and the repository root's development dependencies are not
+installed.
+
 ## Verification gates
 
 - Workspace package build

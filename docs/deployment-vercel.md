@@ -16,11 +16,19 @@ Import the repository as a monorepo project and use:
 | Install Command | Automatic |
 | Build Command | `npm run build` |
 | Output Directory | Framework default; do not override |
+| Node.js Version | `24.x` |
 
 The app's `prebuild` script compiles `@cml-marketplace/core` and
 `@cml-marketplace/server`, whose package exports point to generated `dist`
 files. `vercel.json` selects the Next.js framework and intentionally does not
-set a static output directory.
+set a static output directory. The deployable app declares TypeScript and its
+type packages directly in `devDependencies`; this is required because Vercel
+installs the selected app workspace rather than the repository root's
+development toolchain.
+
+The Node.js engine is pinned to `24.x` so Vercel applies compatible minor and
+security updates without automatically switching the application to a new
+major runtime.
 
 ## Environment variables
 
@@ -74,6 +82,13 @@ If checkout displays `This request origin is not allowed`:
 Do not use `*` and do not add untrusted domains. A request whose `Origin`
 matches neither the public request host nor the configured allowlist still
 returns `403`.
+
+### Troubleshoot `tsc: command not found`
+
+Deploy a revision that contains the app-local TypeScript development
+dependencies in `apps/demo-store/package.json`. This error means the selected
+app workspace was installed without the root workspace's TypeScript tooling.
+Do not work around it by globally installing TypeScript in Vercel.
 
 ## Durable storage
 

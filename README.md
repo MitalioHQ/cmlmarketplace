@@ -29,6 +29,10 @@ npm run dev
 Set `CML_API_KEY` and `CML_API_SECRET` in the ignored `.env.local` file. The
 demo is served at `http://127.0.0.1:4173/`.
 
+The workspace and Vercel deployment use Node.js `24.x`. The demo app declares
+its own TypeScript build tooling so monorepo deployments do not depend on root
+development dependencies being installed.
+
 Checkout writes are disabled by default. Durable checkout requires
 `DATABASE_URL`, and live customer/order/payment operations require the explicit
 `CML_DEMO_MUTATIONS_ENABLED=true` safety flag. Do not enable that flag on a
